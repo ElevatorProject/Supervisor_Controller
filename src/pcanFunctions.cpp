@@ -1,7 +1,6 @@
 #include "../include/pcanFunctions.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdlib.h>  
 #include <errno.h>
 #include <unistd.h> 

@@ -1,6 +1,7 @@
 #include "../include/pcanFunctions.h"
 #include "../include/databaseFunctions.h"
 #include "../include/mainFunctions.h"
+#include "../include/supervisorProgram.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +55,11 @@ int main() {
 				break;
 				
 			case 4: 
-				return(0);
+                printf("Starting Elevator Supervisor Program\n");
+                supervisor_program();
+                break;
+            case 5:
+                return(0);
 			
 			default:
 				printf("Error on input values");
