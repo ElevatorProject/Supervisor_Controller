@@ -18,7 +18,7 @@
 #define GO_TO_FLOOR1 0x05	// Go to floor 1
 #define GO_TO_FLOOR2 0x06	// Go to floor 2
 #define GO_TO_FLOOR3 0x07	// Go to floor 3
-
+#define MSG_OPEN     0x08   // Opens the door of the elevator
 
 // Function declarations
 int pcanTx(int id, int data);

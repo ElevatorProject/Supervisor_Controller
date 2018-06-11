@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-I$(IDIR)
 ODIR=obj
 
-LIBS=-l:libmysqlcppconn.so -lpcan
+LIBS=-l:libmysqlcppconn.so -lpcan -lpthread
 
 _OBJ = main.o mainFunctions.o pcanFunctions.o databaseFunctions.o supervisorProgram.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))

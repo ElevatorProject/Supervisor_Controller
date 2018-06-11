@@ -1,19 +1,31 @@
 #include "../include/supervisorProgram.h"
 #include "../include/pcanFunctions.h"
 
+#include "pcanFunctions.h"
 #include <fcntl.h>
 #include <libpcan.h> // PCAN library
+#include <pthread.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "pcanFunctions.h"
+#define DOOR_OPEN_TIME 5
 
 static HANDLE h2;
 static HANDLE h_TX;
 static HANDLE h_RX;
+static pthread_t door_open_timer_thread;
+static bool are_doors_open = false;
+
+static void *door_timer(void *unused) {
+    are_doors_open = true;
+    printf("%s: doors are open\n", __func__);
+    sleep(DOOR_OPEN_TIME);
+    printf("%s: closing doors\n", __func__);
+    are_doors_open = false;
+}
 
 // TODO: add error check to can init and can status
 static bool init_can_bus() {
@@ -76,9 +88,12 @@ bool supervisor_program() {
     }
     for (;;) {
         can_rx_data(&can_msg);
-        printf("  - R ID:%4x LEN:%1x DATA:%02x \n", // Display the CAN message
-               (int)can_msg.ID, (int)can_msg.LEN, (int)can_msg.DATA[0]);
-
+        if (are_doors_open) {
+            continue;
+        } else {
+            printf("  - R ID:%4x LEN:%1x DATA:%02x \n", // Display the CAN message
+                   (int)can_msg.ID, (int)can_msg.LEN, (int)can_msg.DATA[0]);
+        }
         switch (can_msg.ID) {
         case ID_F1_TO_SC: {
             if (can_msg.DATA[0] == 0x01) {
@@ -110,6 +125,10 @@ bool supervisor_program() {
             }
             case GO_TO_FLOOR3: {
                 send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR3);
+                break;
+            }
+            case MSG_OPEN: {
+                pthread_create(&door_open_timer_thread, NULL, door_timer, NULL);
                 break;
             }
             default: {
