@@ -1,12 +1,12 @@
 #include "../include/supervisorProgram.h"
 #include "../include/pcanFunctions.h"
 
+#include <fcntl.h>
+#include <libpcan.h> // PCAN library
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <libpcan.h>   					// PCAN library
 #include <sys/types.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include "pcanFunctions.h"
@@ -15,15 +15,15 @@ static HANDLE h2;
 static HANDLE h_TX;
 static HANDLE h_RX;
 
-//TODO: add error check to can init and can status
-static bool init_can_bus()
-{
+// TODO: add error check to can init and can status
+static bool init_can_bus() {
     int status = 0;
     // Open a CAN channel
     h_TX = LINUX_CAN_Open("/dev/pcanusb32", O_RDWR);
-    h_RX = LINUX_CAN_Open("/dev/pcanusb32", O_RDWR);		// Open PCAN channel
+    h_RX = LINUX_CAN_Open("/dev/pcanusb32", O_RDWR); // Open PCAN channel
 
-    // Initialize an opened CAN 2.0 channel with a 125kbps bitrate, accepting standard frames
+    // Initialize an opened CAN 2.0 channel with a 125kbps bitrate, accepting
+    // standard frames
     status = CAN_Init(h_TX, CAN_BAUD_125K, CAN_INIT_TYPE_ST);
     status = CAN_Init(h_RX, CAN_BAUD_125K, CAN_INIT_TYPE_ST);
 
@@ -34,23 +34,22 @@ static bool init_can_bus()
     return true;
 }
 
-static void can_rx_data(TPCANMsg *incoming_can_msg)
-{
+static void can_rx_data(TPCANMsg *incoming_can_msg) {
     int status = 0;
     // Clear the channel - new - Must clear the channel before Tx/Rx
     status = CAN_Status(h_RX);
 
     printf("Can status: %d\n", status);
-    while((status = CAN_Read(h_RX, incoming_can_msg)) == PCAN_RECEIVE_QUEUE_EMPTY){
+    while ((status = CAN_Read(h_RX, incoming_can_msg)) ==
+           PCAN_RECEIVE_QUEUE_EMPTY) {
         sleep(1);
     }
-    if(status != PCAN_NO_ERROR) {						// If there is an error, display the code
+    if (status != PCAN_NO_ERROR) { // If there is an error, display the code
         printf("Error 0x%x\n", (int)status);
     }
 }
 
-static void send_can_msg(int id, int data)
-{
+static void send_can_msg(int id, int data) {
     int status = 0;
 
     // Clear the channel - new - Must clear the channel before Tx/Rx
@@ -68,21 +67,17 @@ static void send_can_msg(int id, int data)
     CAN_Write(h_TX, &Txmsg);
 
     printf("%s sending ID %x and FLOOR: %x\n", __func__, id, data);
-
 }
 
-bool supervisor_program()
-{
+bool supervisor_program() {
     TPCANMsg can_msg;
     if (!init_can_bus()) {
         return false;
     }
-    for(;;) {
+    for (;;) {
         can_rx_data(&can_msg);
-        printf("  - R ID:%4x LEN:%1x DATA:%02x \n",	// Display the CAN message
-            (int)can_msg.ID,
-            (int)can_msg.LEN,
-            (int)can_msg.DATA[0]);
+        printf("  - R ID:%4x LEN:%1x DATA:%02x \n", // Display the CAN message
+               (int)can_msg.ID, (int)can_msg.LEN, (int)can_msg.DATA[0]);
 
         switch (can_msg.ID) {
         case ID_F1_TO_SC: {
@@ -118,15 +113,14 @@ bool supervisor_program()
                 break;
             }
             default: {
-                printf("unable to parse car ID: %x, Data: %x", can_msg.ID, can_msg.DATA[0]);
+                printf("unable to parse car ID: %x, Data: %x", can_msg.ID,
+                       can_msg.DATA[0]);
                 break;
             }
             }
             break;
         }
-        default: {
-            break;
-        }
+        default: { break; }
         }
     }
     return true;
