@@ -14,9 +14,9 @@ public:
     Elevator_db();
     ~Elevator_db();
     int db_get_floor_request();
+    int db_set_floor_request(int floor);
 private:
     Driver *driver;  // Create a pointer to a MySQL driver object
     Connection *con; // Create a pointer to a database connection object
-    Statement *stmt; // Crealte a pointer to a Statement object to hold statements
     ResultSet *res;  // Create a pointer to a ResultSet object to hold results
 };

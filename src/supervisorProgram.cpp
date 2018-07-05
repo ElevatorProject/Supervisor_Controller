@@ -1,5 +1,6 @@
 #include "../include/supervisorProgram.h"
 #include "../include/pcanFunctions.h"
+#include "../include/sql_db.h"
 
 #include <fcntl.h>
 #include <libpcan.h> // PCAN library
@@ -14,6 +15,8 @@
 static HANDLE h2;
 static HANDLE h_TX;
 static HANDLE h_RX;
+static int current_floor = 0;
+static Elevator_db db;
 
 // TODO: add error check to can init and can status
 static bool init_can_bus() {
@@ -69,59 +72,93 @@ static void send_can_msg(int id, int data) {
     printf("%s sending ID %x and FLOOR: %x\n", __func__, id, data);
 }
 
+static void can_floor_switch(TPCANMsg *can_msg) {
+    switch (can_msg->ID) {
+    case ID_F1_TO_SC: {
+        if (can_msg->DATA[0] == 0x01) {
+            send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR1);
+            db.db_set_floor_request(1);
+        }
+        break;
+    }
+    case ID_F2_TO_SC: {
+        if (can_msg->DATA[0] == 0x01) {
+            send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR2);
+            db.db_set_floor_request(2);
+        }
+        break;
+    }
+    case ID_F3_TO_SC: {
+        if (can_msg->DATA[0] == 0x01) {
+            send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR3);
+            db.db_set_floor_request(3);
+        }
+        break;
+    }
+    case ID_CC_TO_SC: {
+        switch (can_msg->DATA[0]) {
+        case GO_TO_FLOOR1: {
+            send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR1);
+            db.db_set_floor_request(1);
+            break;
+        }
+        case GO_TO_FLOOR2: {
+            send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR2);
+            db.db_set_floor_request(2);
+            break;
+        }
+        case GO_TO_FLOOR3: {
+            send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR3);
+            db.db_set_floor_request(3);
+            break;
+        }
+        default: {
+            printf("unable to parse car ID: %x, Data: %x", can_msg->ID,
+                   can_msg->DATA[0]);
+            break;
+        }
+        }
+        break;
+    }
+    default: {
+        break;
+    }
+    }
+}
 bool supervisor_program() {
     TPCANMsg can_msg;
+    int new_floor =0;
+    current_floor = db.db_get_floor_request();
+
     if (!init_can_bus()) {
         return false;
     }
     for (;;) {
+        new_floor = db.db_get_floor_request();
+        if (current_floor != new_floor) {
+            current_floor = new_floor;
+            switch(new_floor) {
+                case 1: {
+                    send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR1);
+                    break;
+                }
+                case 2: {
+                    send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR2);
+                    break;
+                }
+                case 3: {
+                    send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR3);
+                    break;
+                }
+                default: {
+                    break;
+                }
+                }
+        }
         can_rx_data(&can_msg);
         printf("  - R ID:%4x LEN:%1x DATA:%02x \n", // Display the CAN message
                (int)can_msg.ID, (int)can_msg.LEN, (int)can_msg.DATA[0]);
-
-        switch (can_msg.ID) {
-        case ID_F1_TO_SC: {
-            if (can_msg.DATA[0] == 0x01) {
-                send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR1);
-            }
-            break;
-        }
-        case ID_F2_TO_SC: {
-            if (can_msg.DATA[0] == 0x01) {
-                send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR2);
-            }
-            break;
-        }
-        case ID_F3_TO_SC: {
-            if (can_msg.DATA[0] == 0x01) {
-                send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR3);
-            }
-            break;
-        }
-        case ID_CC_TO_SC: {
-            switch (can_msg.DATA[0]) {
-            case GO_TO_FLOOR1: {
-                send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR1);
-                break;
-            }
-            case GO_TO_FLOOR2: {
-                send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR2);
-                break;
-            }
-            case GO_TO_FLOOR3: {
-                send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR3);
-                break;
-            }
-            default: {
-                printf("unable to parse car ID: %x, Data: %x", can_msg.ID,
-                       can_msg.DATA[0]);
-                break;
-            }
-            }
-            break;
-        }
-        default: { break; }
-        }
+        can_floor_switch(&can_msg);
     }
     return true;
 }

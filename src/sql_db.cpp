@@ -16,8 +16,33 @@ Elevator_db::Elevator_db() {
     con = driver->connect("tcp://127.0.0.1:3306", "ese", "ese");
     con->setSchema("elevator");
 }
+
 Elevator_db::~Elevator_db() {
     delete res;
-    delete stmt;
     delete con;
+}
+
+int Elevator_db::db_get_floor_request() {
+    int floorNum;
+    Statement *stmt; // Crealte a pointer to a Statement object to hold statements
+    stmt = con->createStatement();
+    res = stmt->executeQuery(
+        "SELECT currentFloor FROM elevatorNetwork WHERE nodeID = 1"); // message
+                                                                      // query
+    while (res->next()) {
+        floorNum = res->getInt("currentFloor");
+    }
+
+    delete stmt; //may need to move to get db
+    return floorNum;
+}
+
+int Elevator_db::db_set_floor_request(int floor) {
+    sql::PreparedStatement *pstmt; // Create a pointer to a prepared statement
+
+    pstmt = con->prepareStatement(
+        "UPDATE elevatorNetwork SET currentFloor = ? WHERE nodeID = 1");
+    pstmt->setInt(1, floor);
+    pstmt->executeUpdate();
+    delete pstmt;
 }
