@@ -8,6 +8,7 @@
 #include <iostream>
 #include <mysql_connection.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 using namespace std;
 
@@ -34,10 +35,12 @@ int Elevator_db::db_get_floor_request() {
     }
 
     delete stmt; //may need to move to get db
+    printf("%s, latest floor number is: %d\n", __func__, floorNum);
     return floorNum;
 }
 
 int Elevator_db::db_set_floor_request(int floor) {
+    printf("%s, setting database to floor: %d\n", __func__, floor);
     sql::PreparedStatement *pstmt; // Create a pointer to a prepared statement
 
     pstmt = con->prepareStatement(
