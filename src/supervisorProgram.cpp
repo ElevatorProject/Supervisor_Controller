@@ -140,14 +140,17 @@ bool supervisor_program() {
             switch(new_floor) {
                 case 1: {
                     send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR1);
+                    db.db_set_floor_request(1);
                     break;
                 }
                 case 2: {
                     send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR2);
+                    db.db_set_floor_request(2);
                     break;
                 }
                 case 3: {
                     send_can_msg(ID_SC_TO_EC, GO_TO_FLOOR3);
+                    db.db_set_floor_request(3);
                     break;
                 }
                 default: {

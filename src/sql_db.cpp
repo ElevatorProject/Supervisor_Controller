@@ -28,10 +28,10 @@ int Elevator_db::db_get_floor_request() {
     Statement *stmt; // Crealte a pointer to a Statement object to hold statements
     stmt = con->createStatement();
     res = stmt->executeQuery(
-        "SELECT currentFloor FROM elevatorNetwork WHERE nodeID = 1"); // message
+        "SELECT requestedFloor FROM elevatorNetwork WHERE nodeID = 1"); // message
                                                                       // query
     while (res->next()) {
-        floorNum = res->getInt("currentFloor");
+        floorNum = res->getInt("requestedFloor");
     }
 
     delete stmt; //may need to move to get db
