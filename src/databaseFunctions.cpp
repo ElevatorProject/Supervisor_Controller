@@ -43,7 +43,7 @@ int db_getFloorNum() {
     return floorNum;
 }
 
-int db_setFloorNum(int floorNum) {
+void db_setFloorNum(int floorNum) {
     sql::Driver *driver;  // Create a pointer to a MySQL driver object
     sql::Connection *con; // Create a pointer to a database connection object
     sql::Statement

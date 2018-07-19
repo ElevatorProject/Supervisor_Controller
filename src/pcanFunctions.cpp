@@ -24,7 +24,7 @@ DWORD status;
 
 // Functions
 // *****************************************************************
-int pcanTx(int id, int data) {
+void pcanTx(int id, int data) {
     h = LINUX_CAN_Open("/dev/pcanusb32", O_RDWR); // Open PCAN channel
 
     // Initialize an opened CAN 2.0 channel with a 125kbps bitrate, accepting

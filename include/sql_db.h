@@ -6,16 +6,27 @@
 #include <iostream>
 #include <mysql_connection.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 using namespace sql;
 
+typedef struct {
+    uint16_t node_id;
+    uint32_t epoch_time;
+    uint16_t msg;
+} msg_log;
+
 class Elevator_db {
 public:
+
     Elevator_db();
     ~Elevator_db();
+
     int db_get_floor_request();
-    int db_set_floor_request(int floor);
+    void db_set_floor_request(int floor);
+    void db_set_can_log(msg_log to_log);
 private:
+
     Driver *driver;  // Create a pointer to a MySQL driver object
     Connection *con; // Create a pointer to a database connection object
     ResultSet *res;  // Create a pointer to a ResultSet object to hold results
