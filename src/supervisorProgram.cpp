@@ -9,10 +9,11 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdint.h>
+#include <time.h>
 
 #include "pcanFunctions.h"
 
-static HANDLE h2;
 static HANDLE h_TX;
 static HANDLE h_RX;
 static int current_floor = 0;
@@ -125,6 +126,18 @@ static void can_floor_switch(TPCANMsg *can_msg) {
     }
     }
 }
+
+static void log_data(TPCANMsg *incoming_msg) {
+    msg_log to_log;
+    time_t epoch_time = time(NULL);
+
+    to_log.node_id = (uint16_t)incoming_msg->ID;
+    to_log.msg = (uint16_t)incoming_msg->DATA[0];
+    to_log.epoch_time = (uint32_t)epoch_time;
+
+    db.db_set_can_log(to_log);
+}
+
 bool supervisor_program() {
     TPCANMsg can_msg;
     int new_floor =0;
@@ -161,6 +174,7 @@ bool supervisor_program() {
         can_rx_data(&can_msg);
         printf("  - R ID:%4x LEN:%1x DATA:%02x \n", // Display the CAN message
                (int)can_msg.ID, (int)can_msg.LEN, (int)can_msg.DATA[0]);
+        log_data(&can_msg);
         can_floor_switch(&can_msg);
     }
     return true;

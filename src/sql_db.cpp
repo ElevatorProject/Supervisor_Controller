@@ -39,13 +39,26 @@ int Elevator_db::db_get_floor_request() {
     return floorNum;
 }
 
-int Elevator_db::db_set_floor_request(int floor) {
-    printf("%s, setting database to floor: %d\n", __func__, floor);
+void Elevator_db::db_set_floor_request(int floor) {
     sql::PreparedStatement *pstmt; // Create a pointer to a prepared statement
+    printf("%s, setting database to floor: %d\n", __func__, floor);
 
     pstmt = con->prepareStatement(
         "UPDATE elevatorNetwork SET currentFloor = ? WHERE nodeID = 1");
     pstmt->setInt(1, floor);
+    pstmt->executeUpdate();
+    delete pstmt;
+}
+
+void Elevator_db::db_set_can_log(msg_log to_log) {
+    sql::PreparedStatement *pstmt; // Create a pointer to a prepared statement
+    printf("%s, logging the following: epoch time %d, node %d, %d\n", __func__, to_log.epoch_time, to_log.node_id, to_log.msg);
+
+    pstmt = con->prepareStatement(
+        "INSERT INTO logging_table VALUES(?,?,?)");
+    pstmt->setInt(1, to_log.epoch_time);
+    pstmt->setInt(2, to_log.node_id);
+    pstmt->setInt(3, to_log.msg);
     pstmt->executeUpdate();
     delete pstmt;
 }
