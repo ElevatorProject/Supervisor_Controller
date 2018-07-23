@@ -36,6 +36,11 @@ int Elevator_db::manage_n_logs() {
     res = stmt->executeQuery(
         "SELECT epoch_time FROM logging_table "); // message
                                                                       // query
+    if (n_logs == 0) {
+        printf("%s: in unlimited log mode no logs will be deleted", __func__);
+        return -1;
+    }
+
     while (res->next()) {
         counter++;
        /* new_epoch = res->getInt("epoch_time");
