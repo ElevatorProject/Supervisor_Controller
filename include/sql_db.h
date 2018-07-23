@@ -19,15 +19,20 @@ typedef struct {
 class Elevator_db {
 public:
 
-    Elevator_db();
+    Elevator_db(uint16_t n_floor_history, uint16_t n_log_history);
     ~Elevator_db();
 
     int db_get_floor_request();
     void db_set_floor_request(int floor);
     void db_set_can_log(msg_log to_log);
-private:
 
+private:
     Driver *driver;  // Create a pointer to a MySQL driver object
     Connection *con; // Create a pointer to a database connection object
     ResultSet *res;  // Create a pointer to a ResultSet object to hold results
+    uint16_t n_floors;
+    uint16_t n_logs;
+
+    int manage_n_logs();
+    int manage_n_floors();
 };
