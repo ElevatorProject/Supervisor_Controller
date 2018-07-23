@@ -13,11 +13,12 @@
 #include <time.h>
 
 #include "pcanFunctions.h"
-
+#define NUMBER_OF_FLOORS 50
+#define NUMBER_OF_LOGS 50
 static HANDLE h_TX;
 static HANDLE h_RX;
 static int current_floor = 0;
-static Elevator_db db;
+static Elevator_db db(NUMBER_OF_FLOORS,NUMBER_OF_LOGS);
 
 // TODO: add error check to can init and can status
 static bool init_can_bus() {
